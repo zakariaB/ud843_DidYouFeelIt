@@ -15,6 +15,7 @@
  */
 package com.example.android.didyoufeelit;
 
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.TextView;
@@ -25,20 +26,20 @@ import android.widget.TextView;
  */
 public class MainActivity extends AppCompatActivity {
 
-    /** URL for earthquake data from the USGS dataset */
+    /**
+     * URL for earthquake data from the USGS dataset
+     */
     private static final String USGS_REQUEST_URL =
-            "http://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=2016-01-01&endtime=2016-05-02&minfelt=50&minmagnitude=5";
+            "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=2014-01-01&endtime=2014-12-01&minmagnitude=7";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Perform the HTTP request for earthquake data and process the response.
-        Event earthquake = Utils.fetchEarthquakeData(USGS_REQUEST_URL);
 
-        // Update the information displayed to the user.
-        updateUi(earthquake);
+        DYFAsyncTask dyfAsyncTask = new DYFAsyncTask();
+        dyfAsyncTask.execute(USGS_REQUEST_URL);
     }
 
     /**
@@ -53,5 +54,23 @@ public class MainActivity extends AppCompatActivity {
 
         TextView magnitudeTextView = (TextView) findViewById(R.id.perceived_magnitude);
         magnitudeTextView.setText(earthquake.perceivedStrength);
+    }
+
+    private class DYFAsyncTask extends AsyncTask<String, Void, Event> {
+
+        @Override
+        protected Event doInBackground(String... params) {
+            // Perform the HTTP request for earthquake data and process the response.
+            Event earthquake = Utils.fetchEarthquakeData(params[0]);
+            return earthquake;
+        }
+
+        @Override
+        protected void onPostExecute(Event earthquake) {
+            if (earthquake == null) {
+                return;
+            }
+            updateUi(earthquake);
+        }
     }
 }
